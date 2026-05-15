@@ -43,24 +43,33 @@ def ensure_fulltext_index() -> None:
 
 
 def search_graph(query: str) -> list[dict]:
-    """Find matching nodes via fulltext, then expand one hop to get relationships."""
+    """Find matching nodes via fulltext, then traverse up to 2 hops.
+
+    1-hop gives us direct relationships from each matched node.
+    2-hop reveals "what else is this neighbor connected to" — the move that
+    distinguishes Graph RAG from flat-chunk RAG.
+    """
     cypher = f"""
-        CALL db.index.fulltext.queryNodes('{FULLTEXT_INDEX}', $query)
+        CALL db.index.fulltext.queryNodes('{FULLTEXT_INDEX}', $search)
         YIELD node, score
-        MATCH (node)-[r]-(connected)
-        RETURN
-            coalesce(node.title, node.name)        AS source,
-            labels(node)[0]                        AS source_type,
-            node.tagline                           AS tagline,
+        WITH node, score ORDER BY score DESC LIMIT 5
+        MATCH path = (node)-[*1..2]-(reached)
+        WITH node, score, relationships(path) AS rels, nodes(path) AS ns
+        UNWIND range(0, size(rels) - 1) AS i
+        WITH ns[i] AS a, rels[i] AS r, ns[i + 1] AS b, score
+        RETURN DISTINCT
+            coalesce(a.title, a.name)              AS source,
+            labels(a)[0]                           AS source_type,
+            a.tagline                              AS tagline,
             type(r)                                AS relationship,
-            coalesce(connected.title, connected.name) AS target,
-            labels(connected)[0]                   AS target_type,
-            score
+            coalesce(b.title, b.name)              AS target,
+            labels(b)[0]                           AS target_type,
+            max(score)                             AS score
         ORDER BY score DESC
-        LIMIT 25
+        LIMIT 60
     """
     with driver.session() as session:
-        result = session.run(cypher, query=query)
+        result = session.run(cypher, search=query)
         return [dict(record) for record in result]
 
 
