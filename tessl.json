@@ -1,0 +1,15 @@
+{
+  "name": "Graph RAG Agent",
+  "mode": "vendored",
+  "dependencies": {
+    "neo4j-contrib/neo4j-skills": {
+      "version": "88e37b89e55e032badd12815bafd46239d8d42d0",
+      "source": "https://github.com/neo4j-contrib/neo4j-skills",
+      "include": {
+        "skills": [
+          "neo4j-cypher-skill"
+        ]
+      }
+    }
+  }
+}

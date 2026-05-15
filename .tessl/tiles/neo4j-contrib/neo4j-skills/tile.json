@@ -1,0 +1,38 @@
+{
+  "name": "neo4j-contrib/neo4j-skills",
+  "version": "88e37b89e55e032badd12815bafd46239d8d42d0",
+  "summary": "Auto-generated tile from GitHub (24 skills)",
+  "private": true,
+  "skills": {
+    "neo4j-cypher-skill": {
+      "path": "neo4j-cypher-skill/SKILL.md"
+    }
+  },
+  "excludes": {
+    "skills": [
+      "neo4j-agent-memory-skill",
+      "neo4j-aura-agent-skill",
+      "neo4j-aura-graph-analytics-skill",
+      "neo4j-aura-provisioning-skill",
+      "neo4j-document-import-skill",
+      "neo4j-driver-dotnet-skill",
+      "neo4j-driver-go-skill",
+      "neo4j-driver-java-skill",
+      "neo4j-driver-python-skill",
+      "neo4j-gds-skill",
+      "neo4j-genai-plugin-skill",
+      "neo4j-getting-started-skill",
+      "neo4j-graphql-skill",
+      "neo4j-graphrag-skill",
+      "neo4j-import-skill",
+      "neo4j-kafka-skill",
+      "neo4j-mcp-skill",
+      "neo4j-modeling-skill",
+      "neo4j-query-tuning-skill",
+      "neo4j-security-skill",
+      "neo4j-snowflake-graph-analytics-skill",
+      "neo4j-spark-skill",
+      "neo4j-vector-index-skill"
+    ]
+  }
+}
