@@ -1,89 +1,40 @@
-# Graph RAG Agent
+# GraphMind
 
-A Knowledge-Graph RAG agent built on **Neo4j + Kimchi + Tessl**.
+A knowledge graph RAG agent built at Hack Night London hosted by Tessl, May 2026.
 
-Traditional RAG chunks documents and looks up the most similar chunks. Graph RAG stores data as a **connected graph** and traverses relationships — so it retrieves not just relevant nodes, but everything those nodes are connected to. That's context flat-chunk RAG can't see.
+## What it does
 
-## How it works
+Instead of storing documents as flat chunks and searching by embedding similarity, GraphMind stores data as a connected graph in Neo4j. When you ask a question, the agent traverses relationships — finding not just relevant nodes but everything connected to them. Richer context than traditional vector search without increased latency.
 
-1. User asks a question.
-2. Agent runs a fulltext search over the Neo4j graph (Movies sample dataset on Aura).
-3. For each match, it expands one hop to gather connected nodes and the relationship types.
-4. The resulting subgraph is serialized as `(source)-[relationship]->(target)` triples and passed to a Kimchi-hosted LLM.
-5. The LLM answers grounded **only** in those triples.
+## Demo
+
+Built and demoed to judges at Hack Night London (Tessl, King's Cross) via video submission, May 2026.
 
 ## Stack
 
-- **Neo4j Aura** — managed graph database, free tier, pre-loaded Movies dataset.
-- **Kimchi** — free OpenAI-compatible LLM inference.
-- **Tessl** — `neo4j-cypher` skill installed so coding agents write correct Cypher first try.
+- **Graph database:** Neo4j (Aura free tier)
+- **LLM inference:** Kimchi — OpenAI-compatible endpoint pointing at open-source models, zero API cost
+- **Query correctness:** Tessl skills (Neo4j Cypher skill) — ensures generated Cypher queries work first time
+- **Language:** Python
 
-## Setup
+## Architectural decisions
 
-### 1. Neo4j Aura
+**Neo4j over a vector database**
+Vector search finds semantically similar chunks but loses relationship information. A graph database preserves relationships explicitly. Ask "Who directed The Matrix?" and Neo4j returns the director, their other films, and their collaborators — not just the movie node.
 
-1. Sign up at [console.neo4j.io](https://console.neo4j.io).
-2. Create a free instance. **Save the generated password** — you only see it once.
-3. Copy the connection URI (looks like `neo4j+s://xxxxx.databases.neo4j.io`).
-4. The Movies sample is loaded by `load_sample.py` below — you do not need to manually run `:play movies`.
+**Kimchi for LLM inference**
+Same OpenAI-compatible interface as Claude or GPT-4. Points at open-source models (GLM 5, Kimi K2.5) with no usage limits and no API cost. Ideal for rapid prototyping and hackathon environments where you want to iterate without burning credits.
 
-### 2. Kimchi
+**Tessl skills for Cypher correctness**
+LLMs frequently generate outdated or incorrect Cypher (Neo4j's query language). Installing the Neo4j Cypher Tessl skill gives the coding agent accurate, up-to-date knowledge of the query syntax, reducing debugging time significantly.
 
-1. Sign up at [kimchi.dev](https://kimchi.dev).
-2. Grab your API key (starts with `castai_v1_`).
-3. Note: the OpenAI-compatible base URL is `https://llm.cast.ai/openai/v1` (Kimchi is hosted on CAST AI's LLM hub).
-4. Available models include `kimi-k2.6`, `kimi-k2.5`, `minimax-m2.7`, `minimax-m2.5`, `qwen3-coder-next-fp8`, `nemotron-3-super-fp4`, `smollm2-360m`, `smollm2-135m`.
+## What I would do next
 
-### 3. Tessl skill (optional but recommended)
+- Add evaluation harness to measure retrieval quality across query types
+- Add LangSmith or Langfuse observability to trace agent decisions
+- Replace hardcoded dataset with a configurable document ingestion pipeline
+- Add Terraform for reproducible infrastructure deployment
 
-```bash
-npx tessl install neo4j-cypher
-```
+## Built by
 
-This gives any coding agent in this repo proper Neo4j/Cypher knowledge so generated queries work first try.
-
-### 4. Local install
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-# edit .env with your Neo4j URI/password and Kimchi key
-python load_sample.py   # populates Aura with the Movies dataset
-```
-
-## Run
-
-One-shot:
-
-```bash
-python agent.py "Who directed The Matrix and what other movies did they make?"
-```
-
-Interactive:
-
-```bash
-python agent.py
-```
-
-## Example questions
-
-- *Who directed The Matrix and what other movies did they make?*
-- *What actors worked with Tom Hanks?*
-- *Tell me about Keanu Reeves' filmography in this dataset.*
-
-## Files
-
-| File | Purpose |
-|---|---|
-| `agent.py` | The whole agent — Neo4j 2-hop search + Kimchi LLM call. |
-| `load_sample.py` | One-shot loader for the canonical Neo4j Movies sample. |
-| `requirements.txt` | Python deps. |
-| `.env.example` | Template for credentials. Copy to `.env`. |
-| `.gitignore` | Keeps `.env` out of git. |
-| `tessl.json`, `.tessl/`, `.mcp.json` | Tessl `neo4j-cypher-skill` so coding agents write correct Cypher. |
-
-## Why this matters in 30 seconds
-
-> I built a knowledge-graph RAG agent. Instead of storing documents as flat chunks, the data lives as a connected graph in Neo4j. When you ask a question, the agent traverses relationships — so it doesn't just find relevant nodes, it finds what's connected to them. Traditional RAG misses those connections. Graph RAG doesn't. I used Kimchi for free LLM inference and a Tessl skill to make sure the Cypher queries worked first time.
+Amaan Miah — [github.com/amaan-miah](https://github.com/amaan-miah) — [amaan-miah.github.io](https://amaan-miah.github.io)
